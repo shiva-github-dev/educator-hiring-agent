@@ -20,8 +20,9 @@ Notes:
   `/healthz` every 5 min to keep it warm.
 - Ephemeral disk: checkpoints/logs reset on redeploy; the Google Sheet is the
   source of truth, so hiring state survives.
-- `serve.py` lazy-loads the heavy modules so the process binds fast (~5 s) —
-  this keeps Render's port detection from restarting the deploy.
+- `serve.py` runs the heavy langgraph work in a short-lived `scheduler.run_tick`
+  subprocess, so the HTTP server stays lean (~55 MB) and Render never OOMs the
+  512 MiB free instance; bind is fast (~5 s) so port detection is happy.
 
 ## VPS + Docker Compose (recommended for real mode)
 
