@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><title>Log — Educator Hiring Agent</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 1100px; }
+  a { color: #1e6fd9; } table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  th, td { border: 1px solid #ddd; padding: .3rem; text-align: left; vertical-align: top; }
+  .ERROR { color: #b00020; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Log</h1>
+<p><a href="/">Dashboard</a> · <a href="/diagnosis">Diagnosis</a> · <a href="/healthz">Healthz</a></p>
+<form method="get" action="/logs"><label>Filter event: <input name="event" value="{{ event }}"></label> <button>Go</button></form>
+<table>
+  <tr><th>ts</th><th>level</th><th>event</th><th>candidate</th><th>message</th></tr>
+  {% for r in rows %}
+  <tr>
+    <td>{{ r.ts }}</td><td class="{{ r.level }}">{{ r.level }}</td><td>{{ r.event_id }}</td>
+    <td>{{ r.candidate_email }}</td><td>{{ r.message }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</body>
+</html>

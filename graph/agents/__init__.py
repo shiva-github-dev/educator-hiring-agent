@@ -1,0 +1,1 @@
+"""Package marker for specialist agents (subgraphs/nodes under A0)."""

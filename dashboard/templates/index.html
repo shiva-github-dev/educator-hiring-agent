@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Educator Hiring Agent — Agent 1</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 1100px; }
+  h1 { font-size: 1.4rem; }
+  form.inline { display: inline; }
+  .demo { padding: .6rem 1rem; background: #eef5ff; border: 1px solid #1e6fd9; border-radius: 6px; margin-bottom: 1rem; }
+  .demo label { margin-right: .5rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; margin-bottom: 2rem; }
+  th, td { border: 1px solid #ddd; padding: .35rem; text-align: left; vertical-align: top; }
+  button.small { padding: .15rem .5rem; font-size: .75rem; }
+  pre { white-space: pre-wrap; margin: 0; }
+</style>
+</head>
+<body>
+<h1>Educator Hiring Agent</h1>
+<p><a href="/logs">Log</a> · <a href="/diagnosis">Diagnosis</a> · <a href="/healthz">Healthz</a></p>
+
+{% if demo_mode %}
+<div class="demo">
+  <strong>Demo mode</strong> — messages are simulated (nothing is sent on WhatsApp).
+  Create a request below, then reply as a candidate / round-2 educator with the buttons
+  or the simulator at the bottom.
+</div>
+{% endif %}
+
+{% if needs_attention %}
+<div style="padding:.6rem 1rem; background:#fdecea; border:1px solid #b00020; border-radius:6px; margin-bottom:1rem;">
+  <strong>{{ needs_attention|length }} event(s) need attention:</strong>
+  {% for r in needs_attention %}{{ r.event_id }} ({{ r.status }}) {% endfor %}
+  — see <a href="/diagnosis">Diagnosis</a> or run <code>python -m tools.diagnose --event &lt;id&gt;</code>
+</div>
+{% endif %}
+{% if stale_ticks %}
+<div style="padding:.6rem 1rem; background:#fff7e6; border:1px solid #9a6700; border-radius:6px; margin-bottom:1rem;">
+  <strong>Watchdog:</strong> last tick {{ last_tick or "never" }} — stale. The scheduler may be down.
+</div>
+{% endif %}
+
+<h2>New hiring request</h2>
+<form method="post" action="/requests" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:.5rem 1rem; padding:1rem; border:1px solid #ddd; border-radius:8px;">
+  <label>Centre <input name="centre" list="centres" required>
+    <datalist id="centres">{% for c in centres %}<option value="{{ c.centre }}">{% endfor %}</datalist></label>
+  <label>Location <input name="location" required></label>
+  <label>Subject <input name="subject" placeholder="e.g. Physics" required></label>
+  <label>Exam <select name="exam"><option>JEE</option><option>NEET</option><option>Both</option></select></label>
+  <label>Min years <input name="min_experience" type="number" min="0" step="0.5" value="0"></label>
+  <label>Hiring type <select name="hiring_type"><option value="fresh">Fresh</option><option value="replacement">Replacement</option></select></label>
+  <label>Who is leaving <input name="leaving_educator" list="educators">
+    <datalist id="educators">{% for c in centres %}<option value="{{ c.educator_name }} ({{ c.centre }})">{% endfor %}</datalist></label>
+  <label>Round-2 interviewer
+    <select name="round2_educator">{% for c in centres %}<option value="{{ c.educator_email }}">{{ c.educator_name }} — {{ c.centre }}</option>{% endfor %}</select></label>
+  <button type="submit" style="grid-column: 1 / -1; padding:.5rem; background:#1e6fd9; color:#fff; border:0; border-radius:6px;">Create Hiring Request</button>
+</form>
+
+<h2>Requests</h2>
+<table>
+  <tr><th>Event</th><th>Centre</th><th>Subject</th><th>Exam</th><th>Type</th><th>Round-2</th><th>Status</th><th>Updated</th></tr>
+  {% for r in requests %}
+  <tr>
+    <td>{{ r.event_id }}</td><td>{{ r.centre }}</td><td>{{ r.subject }}</td><td>{{ r.exam }}</td>
+    <td>{{ r.hiring_type }}</td><td>{{ r.round2_educator_email }}</td><td>{{ r.status }}</td><td>{{ r.updated_at }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Candidates</h2>
+<table>
+  <tr><th>Event</th><th>Candidate</th><th>Status</th><th>Follow-ups</th><th>Verdict</th><th>Round-2 slot</th>{% if demo_mode %}<th>Demo: reply as candidate</th>{% endif %}</tr>
+  {% for c in candidates %}
+  <tr>
+    <td>{{ c.event_id }}</td><td>{{ c.educator_name }} ({{ c.educator_email }})</td>
+    <td>{{ c.status }}</td><td>{{ c.followup_count }}</td><td>{{ c.verdict }}</td><td>{{ c.round2_slot }}</td>
+    {% if demo_mode %}
+    <td>
+      <form class="inline" method="post" action="/demo/reply">
+        <input type="hidden" name="from_number" value="{{ c.educator_phone }}">
+        <input type="hidden" name="body" value="yes"><input type="hidden" name="redirect" value="/">
+        <button class="small" type="submit">Reply yes</button>
+      </form>
+      <form class="inline" method="post" action="/demo/reply">
+        <input type="hidden" name="from_number" value="{{ c.educator_phone }}">
+        <input type="hidden" name="body" value="no"><input type="hidden" name="redirect" value="/">
+        <button class="small" type="submit">Reply no</button>
+      </form>
+    </td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+</table>
+
+{% if demo_mode %}
+<h2>Round-2 negotiation</h2>
+<table>
+  <tr><th>Event</th><th>Candidate</th><th>State</th><th>Slots</th><th>Chosen</th></tr>
+  {% for r in round2 %}
+  <tr><td>{{ r.event_id }}</td><td>{{ r.candidate_email }}</td><td>{{ r.state }}</td><td><pre>{{ r.slots_json }}</pre></td><td>{{ r.choice }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Simulate an inbound message</h2>
+<div class="demo">
+  <form method="post" action="/demo/reply">
+    <label>From (phone) <input name="from_number" placeholder="e.g. 919876543210"></label>
+    <label>Body
+      <textarea name="body" rows="3" cols="50" placeholder="e.g. reply as round-2 educator with:&#10;2026-08-20T11:00:00&#10;2026-08-21T17:30:00"></textarea>
+    </label>
+    <input type="hidden" name="redirect" value="/">
+    <button type="submit" style="padding:.4rem .8rem; background:#1e6fd9; color:#fff; border:0; border-radius:6px;">Send as…</button>
+  </form>
+  <p><small>Candidate phone + "yes"/"no" → outreach. Educator phone (from the request row) + slot lines → round-2 negotiation. Candidate phone + a slot number → pick a slot.</small></p>
+</div>
+{% endif %}
+</body>
+</html>

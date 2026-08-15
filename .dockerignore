@@ -1,0 +1,14 @@
+.venv
+.git
+.data
+logs
+.sandbox
+__pycache__
+*.pyc
+.pytest_cache
+node_modules
+session-data
+*.db
+.env
+credentials
+tests

@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: edu-hiring-agent
+    ports:
+      - "8000:8000"
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - app-data:/app/.data     # SQLite checkpointer (threads survive restarts)
+      - app-logs:/app/logs      # errors.jsonl
+volumes:
+  app-data:
+  app-logs:
