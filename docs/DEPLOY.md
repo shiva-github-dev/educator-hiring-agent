@@ -4,7 +4,26 @@ Recommended: a small VPS (DigitalOcean / Hetzner) + Docker Compose — persisten
 disk keeps the SQLite checkpointer and threads alive across restarts, and it
 supports switching to real mode later.
 
-## VPS + Docker Compose (recommended)
+## Render (this project's live demo)
+
+Live URL: **https://educator-hiring-agent.onrender.com** (free tier, demo mode).
+
+Deployed via the Render API from the GitHub repo `shiva-github-dev/educator-hiring-agent`
+(public, branch `main`, auto-deploy on push). Env vars set at the service:
+`GCP_SA_JSON` (base64), `SPREADSHEET_ID`, `DEMO_MODE=true`, `DEEPSEEK_API_KEY`,
+`PYTHON_VERSION=3.12.0`. Build `pip install -r requirements.txt`, start
+`python serve.py`, health path `/healthz`.
+
+Notes:
+- Free instances sleep after ~15 min idle; the first request wakes them in
+  ~30–60 s. Add a free [UptimeRobot](https://uptimerobot.com) ping to
+  `/healthz` every 5 min to keep it warm.
+- Ephemeral disk: checkpoints/logs reset on redeploy; the Google Sheet is the
+  source of truth, so hiring state survives.
+- `serve.py` lazy-loads the heavy modules so the process binds fast (~5 s) —
+  this keeps Render's port detection from restarting the deploy.
+
+## VPS + Docker Compose (recommended for real mode)
 
 ```bash
 # on the server, once:

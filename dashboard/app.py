@@ -13,8 +13,6 @@ from fastapi.templating import Jinja2Templates
 from config.schema import CENTRE_REQUEST_HEADERS, dict_to_row, read_health, rows_with
 from config.settings import settings
 from core.sheets import SheetsClient
-from graph.agents.a3_comms import CommsAgent
-from scheduler.inbound import simulate_inbound
 
 app = FastAPI(title="Educator Hiring Agent")
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -64,6 +62,9 @@ def demo_reply(
     redirect: str = Form("/"),
 ):
     """Demo-mode reply simulator: feeds a message into the real inbound pipeline."""
+    from graph.agents.a3_comms import CommsAgent
+    from scheduler.inbound import simulate_inbound
+
     sheets = _sheets()
     simulate_inbound(sheets, CommsAgent(sheets=sheets), from_number, body)
     return RedirectResponse(redirect, status_code=303)

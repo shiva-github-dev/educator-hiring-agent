@@ -11,6 +11,10 @@ messages candidates on WhatsApp (with follow-ups), sends a Calendly link on inte
 reads the checker's verdict, and books the round-2 interview with the centre's educator
 on Google Calendar. Every step is logged, error-handled, and visible on a dashboard.
 
+> **Live demo:** https://educator-hiring-agent.onrender.com (demo mode — create a request,
+> then reply as a candidate/round-2 educator from the dashboard's reply buttons).
+> Free-tier note: the instance sleeps after ~15 min idle; the first visit may take ~30–60 s.
+
 ## Architecture
 
 Six cooperating agents, one Python process, driven by a 15-minute tick scheduler:
