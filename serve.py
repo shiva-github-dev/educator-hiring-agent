@@ -1,6 +1,8 @@
 """Single-process entry for Docker: tick scheduler (background) + dashboard."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import uvicorn
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -10,6 +12,8 @@ from scheduler.tick import run_once
 
 def main() -> None:
     scheduler = BackgroundScheduler(timezone="UTC")
+    # Fire one tick immediately on boot, then on the interval.
+    scheduler.add_job(run_once, "date", run_date=datetime.now(timezone.utc))
     scheduler.add_job(
         run_once,
         "interval",

@@ -13,3 +13,4 @@ session-data/
 logs/
 .sandbox/
 .data/
+start-agent.bat
